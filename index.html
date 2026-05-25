@@ -22,7 +22,7 @@
 #shell-game-wrapper {
     background: #111;
     color: #fff;
-    padding: 15px;
+    padding: 15px 15px 30px 15px; /* Unten auf 30px erhöht für mehr Platz */
     border-radius: 12px;
     text-align: center;
     font-family: 'Arial', sans-serif;
@@ -30,6 +30,8 @@
     margin: 10px auto;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     height: auto; 
+    min-height: 320px; /* Garantiert, dass der Kasten groß genug bleibt */
+    box-sizing: border-box; /* Verhindert Darstellungsfehler */
 }
 #game-status {
     font-size: 18px;
@@ -140,18 +142,10 @@ let currentRound = 1;
 let ballSlot = 1; 
 let isShuffling = false;
 let gameActive = false;
-let positions =;
+let positions = [0, 1, 2];
 let shuffleCount = 0;
 const maxShuffles = 7;
 let isFirstRoundOfGame = true; 
-let soundPlayedThisStep = false;
-
-// =========================================================================
-// WICHTIG: FÜGE HIER DEN KOPIERTEN DOWNLOAD-LINK VON JIMDO EIN
-// =========================================================================
-const shuffleSound = new Audio('<span style="color:red; font-weight:bold;"> https://www.magic-mike-world.de/app/download/17052436824/BEcher++Sound+Schieben.mp3?t=1779711747 </span>'); 
-// =========================================================================
-shuffleSound.volume = 0.5;
 
 function initRound() {
     isShuffling = false;
@@ -175,12 +169,6 @@ function initRound() {
 }
 
 function handleStartButtonClick() {
-    // Schaltet die Audiodatei direkt beim Klick frei
-    shuffleSound.play().then(() => {
-        shuffleSound.pause();
-        shuffleSound.currentTime = 0;
-    }).catch(err => console.log("Audio bereitgestellt", err));
-
     if (isFirstRoundOfGame) {
         startIntro();
     } else {
@@ -229,8 +217,6 @@ function doShuffle() {
         return;
     }
     
-    soundPlayedThisStep = false;
-    
     let idx1 = Math.floor(Math.random() * 3);
     let idx2 = Math.floor(Math.random() * 3);
     while (idx1 === idx2) {
@@ -259,7 +245,7 @@ function chooseCup(cupId) {
     if (!gameActive || isShuffling) return;
     gameActive = false;
     
-    let clickedSlot = positions.indexOf(cupId); 
+    let clickedSlot = cupId; 
     
     if (currentRound === 4) {
         for(let i=0; i<3; i++) {
@@ -279,8 +265,8 @@ function chooseCup(cupId) {
             
             startBtn.onclick = function() {
                 currentRound = 1;
-                positions =;
-                ballSlot = Math.floor(Math.random() * 3);
+                positions = [0, 1, 2];
+                ballSlot = 1;
                 isFirstRoundOfGame = true; 
                 
                 startBtn.innerText = "Spiel starten";
@@ -289,7 +275,7 @@ function chooseCup(cupId) {
                 document.getElementById('magic-title').style.display = 'block';
                 initRound();
             };
-        }, 3000);
+        }, 2000);
         
         return;
     }
@@ -298,37 +284,24 @@ function chooseCup(cupId) {
         document.getElementById(`cup-${i}`).classList.add('lifted');
     }
     
-    let actualBallSlot = positions.indexOf(ballSlot);
     const ballItem = document.getElementById(`item-${ballSlot}`);
     ballItem.classList.add('ball', 'visible');
     
-    if (clickedSlot === actualBallSlot) {
+    if (clickedSlot === ballSlot) {
         document.getElementById('game-status').innerText = "Richtig! Gut aufgepasst!";
     } else {
-        document.getElementById('game-status').innerText = "Knapp davor! Der Ball war unter einem anderen Becher.";
+        document.getElementById('game-status').innerText = "Knapp daneben! Der Ball war im anderen Becher.";
     }
     
     currentRound++;
     document.getElementById('start-btn').innerText = `Runde ${currentRound} starten`;
     
     setTimeout(() => {
-        ballSlot = Math.floor(Math.random() * 3);
         initRound();
     }, 3000);
 }
 
 window.onload = function() {
     initRound();
-    
-    for (let i = 0; i < 3; i++) {
-        const slot = document.getElementById(`slot-${i}`);
-        slot.addEventListener('transitionstart', (e) => {
-            if (isShuffling && e.propertyName === 'left' && !soundPlayedThisStep) {
-                soundPlayedThisStep = true;
-                shuffleSound.currentTime = 0;
-                shuffleSound.play().catch(err => console.log("Audio verzögert:", err));
-            }
-        });
-    }
 };
 </script>
